@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Agregar Producto</h2>
+    <br>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }} {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'Producto:listar_productos' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

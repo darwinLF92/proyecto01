@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Productos para Fabricación</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio Compra</th>
+            <th>Precio Venta</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td>{{ producto.codigo }}</td>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.descripcion }}</td>
+            <td>{{ producto.precio_compra }}</td>
+            <td>{{ producto.precio_venta }}</td>
+            <td>{{ producto.stock }}</td>
+            <td>
+                <a href="{% url 'Producto:aumentar_stock' producto.id %}" class="btn btn-secondary">Aumentar</a>
+                <a href="{% url 'Producto:ver_detalle_producto' producto.id %}" class="btn btn-info">Ver Detalle</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

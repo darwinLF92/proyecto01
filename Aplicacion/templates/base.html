@@ -1,0 +1,104 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Aplicación Django{% endblock %}</title>
+    <!-- Vincular tus hojas de estilo aquí, por ejemplo: -->
+    <!--link rel="stylesheet" href="{% static 'Aplicacion/css/styles.css' %}"-->
+
+
+    <style>
+        /* Estilo para el contenedor del menú desplegable */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Estilo para el contenido desplegable (por defecto oculto) */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        /* Estilo para los ítems del menú desplegable */
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Muestra el menú desplegable al pasar el mouse sobre el contenedor */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Cambia el color de fondo al pasar el mouse sobre los ítems del menú desplegable */
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+    </style>
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- Puedes agregar una barra de navegación aquí, por ejemplo: -->
+            {% if user.is_authenticated %}
+            <a href="{% url 'Aplicacion:home' %}">Inicio</a>
+            <a href="{% url 'Usuarios:list_users' %}">Usuarios</a>
+            <div class="dropdown">
+                <a href="#">Productos</a>
+                <div class="dropdown-content">
+                    <a href="{% url 'Producto:listar_productos' %}">Productos</a>
+                    <a href="{% url 'Producto:listar_productos_fabricacion' %}">Productos Producción</a>
+                </div>
+            </div>
+            <a href="{% url 'Aplicacion:logout' %}">Proveedores</a>
+            <a href="{% url 'Aplicacion:logout' %}">Clientes</a>
+            <a href="{% url 'Aplicacion:logout' %}">Ventas</a>
+            <a href="{% url 'Aplicacion:logout' %}">Compras</a>
+            <a href="{% url 'Aplicacion:logout' %}">Reportes</a>
+            <a href="{% url 'Aplicacion:logout' %}">Cerrar sesión</a>
+            {% else %}
+            <a href="{% url 'Aplicacion:login' %}">Iniciar sesión</a>
+            <a href="{% url 'Aplicacion:register' %}">Registrarse</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- El contenido específico de cada página se insertará aquí -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <!-- Puedes agregar un pie de página aquí, por ejemplo: -->
+        <p>&copy; 2023 Mi Aplicación Django</p>
+    </footer>
+
+    <!-- Vincular tus scripts de JavaScript aquí, por ejemplo: -->
+    <!-- <script src="{% static 'js/scripts.js' %}"></script> -->
+    <!-- CSS de Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- JavaScript de Bootstrap -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

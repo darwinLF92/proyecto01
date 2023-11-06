@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Detalle del Producto: {{ producto.nombre }}</h1>
+
+<h2>Componentes</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre de Materia Prima</th>
+            <th>Cantidad Necesaria</th>
+            <th>Stock Actual</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for componente in componentes %}
+        <tr>
+            <td>{{ componente.nombre }}</td>
+            <td>{{ componente.cantidad_necesaria }}</td>
+            <td>{{ componente.stock_actual }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Este producto no tiene componentes.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'Producto:listar_productos_fabricacion' %}">Volver a la lista de productos</a>
+
+{% endblock %}

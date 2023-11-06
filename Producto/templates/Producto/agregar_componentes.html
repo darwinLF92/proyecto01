@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Agregar componentes a {{ producto.nombre }}</h2>
+  
+  <form method="post">
+    {% csrf_token %}
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ formset.management_form }}
+        {% for form in formset %}
+          <tr>
+            <td>{{ form.producto_componente }}</td>
+            <td>{{ form.cantidad }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <input type="submit" value="Guardar componentes">
+  </form>
+  
+  <a href="{% url 'Producto:listar_productos' %}">Regresar a la lista de productos</a>
+{% endblock %}

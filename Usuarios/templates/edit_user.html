@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Usuario{% endblock %}
+
+{% block content %}
+  <h1>Editar Usuario: {{ form.instance.username }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Actualizar</button>
+  </form>
+{% endblock %}
