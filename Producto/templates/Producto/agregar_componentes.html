@@ -1,31 +1,102 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Agregar componentes a {{ producto.nombre }}</h2>
-  
-  <form method="post">
-    {% csrf_token %}
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Componente</th>
-          <th>Cantidad</th>
-        </tr>
-      </thead>
-      <tbody>
+<div class="container mt-5">
+    <h2>Agregar Materias Primas a: {{ producto.nombre }}</h2>
+    <br>
+    <form method="post" novalidate>
+        {% csrf_token %}
         {{ formset.management_form }}
-        {% for form in formset %}
-          <tr>
-            <td>{{ form.producto_componente }}</td>
-            <td>{{ form.cantidad }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    
-    <input type="submit" value="Guardar componentes">
-  </form>
-  
-  <a href="{% url 'Producto:listar_productos' %}">Regresar a la lista de productos</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Materia Prima</th>
+                    <th>Cantidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                    <tr class="formset-row">
+                        <td>
+                            {{ form.producto_componente.errors }}
+                            {{ form.producto_componente }}
+                        </td>
+                        <td>
+                            {{ form.cantidad.errors }}
+                            {{ form.cantidad }}
+                        </td>
+                        <td>
+                            {% if form.DELETE %}
+                                {{ form.DELETE }} Eliminar
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" id="add-componente" class="btn btn-secondary">Agregar Componente</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{% url 'Producto:ver_detalle_producto' producto_id=producto.id %}" class="btn btn-secondary">Volver</a>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    jQuery(document).ready(function ($) {
+        var formsetSelector = '#componente-table';
+        var addButtonSelector = '#add-componente';
+        var deleteButtonSelector = '.delete-row';
+        var totalFormsInputSelector = '#id_componentes-TOTAL_FORMS';
+
+        // Clonar la última fila de componente
+        function cloneMore(selector, type) {
+            var newElement = $(selector).clone(true);
+            var total = parseInt($(totalFormsInputSelector).val());
+            newElement.find(':input:not([type=button])').each(function() {
+                var name = $(this).attr('name').replace('-' + (total-1) + '-', '-' + total + '-');
+                var id = 'id_' + name;
+                $(this).attr({'name': name, 'id': id}).val('').removeAttr('checked');
+            });
+            newElement.find('label').each(function() {
+                var forValue = $(this).attr('for');
+                if (forValue) {
+                    forValue = forValue.replace('-' + (total-1) + '-', '-' + total + '-');
+                    $(this).attr('for', forValue);
+                }
+            });
+            total++;
+            $(totalFormsInputSelector).val(total);
+            $(selector).after(newElement);
+            return newElement;
+        }
+
+        // Añadir nueva fila de componente
+        $(addButtonSelector).click(function() {
+            var newRow = cloneMore('.formset-row:last', 'componentes');
+            // Agrega cualquier inicialización que necesites para la nueva fila aquí
+        });
+
+        // Eliminar fila de componente
+        $(formsetSelector).on('click', deleteButtonSelector, function() {
+            var total = parseInt($(totalFormsInputSelector).val());
+            if(total > 1){
+                $(this).parents('.formset-row').remove();
+                $(totalFormsInputSelector).val(total - 1);
+                // Actualizar los índices de las filas restantes
+                $(formsetSelector).find('.formset-row').each(function(index) {
+                    $(this).find(':input').each(function() {
+                        var name = $(this).attr('name').replace(/-\d+-/, '-' + index + '-');
+                        var id = 'id_' + name;
+                        $(this).attr({'name': name, 'id': id});
+                    });
+                });
+            }
+        });
+    });
+
+</script>
+
 {% endblock %}

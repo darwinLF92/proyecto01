@@ -13,15 +13,26 @@ class Producto(models.Model):
     activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.NOMBRE
+        return self.nombre
 
 class ComponenteProducto(models.Model):
-    producto_principal = models.ForeignKey(Producto, related_name='producto_principal', on_delete=models.CASCADE)
-    producto_componente = models.ForeignKey(Producto, related_name='producto_componente', on_delete=models.CASCADE)
+    producto_principal = models.ForeignKey(
+        Producto,
+        related_name='componentes_principal',  # Cambiado para ser único
+        on_delete=models.CASCADE
+    )
+    producto_componente = models.ForeignKey(
+        Producto,
+        related_name='componentes_asociados',  # Cambiado para ser único, si es necesario
+        on_delete=models.CASCADE
+    )
     cantidad = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.producto_componente.nombre} en {self.producto_principal.nombre}"
+    @property
+    def costo_total(self):
+        return self.cantidad * self.producto_componente.precio_compra
 
 
 

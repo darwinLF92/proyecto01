@@ -1,9 +1,10 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, redirect,  get_object_or_404
 from django.db import transaction
 from .models import Producto, ComponenteProducto, Transaccion
-from .forms import ProductoForm, ComponenteProductoForm
+from .forms import ProductoForm, ComponenteProductoForm, ProductoPrincipalForm
 from django.http import JsonResponse
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, inlineformset_factory
 
 def listar_productos(request):
     producto = Producto.objects.filter(activo=True)  # Assuming 'activo' is a BooleanField in your model
@@ -15,19 +16,45 @@ def get_productos(request):
     return JsonResponse(list(producto), safe=False)
 
 
+def seleccionar_producto_principal(request):
+    if request.method == 'POST':
+        form = ProductoPrincipalForm(request.POST)
+        if form.is_valid():
+            # Aquí se captura el producto principal seleccionado del formulario
+            producto_principal = form.cleaned_data['producto_principal']
+            # Redirigir a la vista de agregar componentes con el ID del producto principal
+            return redirect('Producto:agregar_componentes', producto_id=producto_principal.id)
+    else:
+        form = ProductoPrincipalForm()
+    return render(request, 'Producto/seleccionar_producto_principal.html', {'form': form})
+
 def agregar_componentes(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
+    ComponenteProductoFormSet = inlineformset_factory(
+        Producto,
+        ComponenteProducto,
+        form=ComponenteProductoForm,
+        fields=('producto_componente', 'cantidad'),
+        extra=1,
+        can_delete=True,
+        fk_name='producto_principal'
+    )
+
     if request.method == 'POST':
-        formset = ComponenteProductoForm(request.POST, prefix='componente')
+        formset = ComponenteProductoFormSet(request.POST, instance=producto, prefix='componentes')
         if formset.is_valid():
-            for form in formset:
-                componente_producto = form.save(commit=False)
-                componente_producto.producto_principal = producto
-                componente_producto.save()
+            formset.save()
             return redirect('Producto:ver_detalle_producto', producto_id=producto.id)
     else:
-        formset = ComponenteProductoForm(prefix='componente', queryset=ComponenteProducto.objects.none())
-    return render(request, 'Producto/agregar_componentes.html', {'producto': producto, 'formset': formset})
+        formset = ComponenteProductoFormSet(instance=producto, prefix='componentes')
+
+    context = {
+        'formset': formset,
+        'producto': producto,
+    }
+
+    return render(request, 'Producto/agregar_componentes.html', context)
+
 
 #para ver la lista de productos marcados como fabricacion
 def listar_productos_fabricacion(request):
@@ -49,47 +76,42 @@ def agregar_producto(request):
         return render(request, 'Producto/agregar_producto.html', {'form': form})
 
 
+
+# Define el formset una sola vez, fuera de la función de la vista.
+ComponenteProductoFormSet = inlineformset_factory(
+    Producto,
+    ComponenteProducto,
+    form=ComponenteProductoForm,
+    fields=('producto_componente', 'cantidad'),
+    extra=1,
+    can_delete=True,
+    fk_name='producto_principal'
+)
+
 def editar_producto(request, producto_id):
+    # Obtén el producto que quieres editar o manda un error 404 si no existe
     producto = get_object_or_404(Producto, id=producto_id)
-    ComponenteProductoFormSet = modelformset_factory(
-        ComponenteProducto, 
-        form=ComponenteProductoForm, 
-        extra=0
-    )
+
     if request.method == 'POST':
+        # Crea una instancia del formulario y rellénalo con los datos de la petición (binding):
         form = ProductoForm(request.POST, instance=producto)
-        componente_formset = ComponenteProductoFormSet(
-            request.POST, 
-            request.FILES, 
-            queryset=ComponenteProducto.objects.filter(producto_principal=producto), 
-            prefix='componentes'
-        )
-        if form.is_valid() and componente_formset.is_valid():
+        if form.is_valid():
+            # Guarda el producto editado en la base de datos
             form.save()
-            componentes = componente_formset.save(commit=False)
-            for componente in componentes:
-                componente.producto_principal = producto
-                componente.save()
-            componente_formset.save_m2m()
+            # Redirige a la lista de productos o a la vista de detalles del producto
             return redirect('Producto:listar_productos')
-        else:
-            # Manejar los errores aquí
-            pass
     else:
+        # Crea el formulario con los datos del producto que se va a editar
         form = ProductoForm(instance=producto)
-        componente_formset = ComponenteProductoFormSet(
-            queryset=ComponenteProducto.objects.filter(producto_principal=producto), 
-            prefix='componentes'
-        )
 
-    context = {
-        'form': form,
-        'componente_formset': componente_formset,
-        'producto': producto
-    }
-    return render(request, 'Producto/editar_producto.html', context)
+    # Renderiza la plantilla con el formulario
+    return render(request, 'Producto/editar_producto.html', {'form': form, 'producto': producto})
 
-# Puedes agregar vistas similares para agregar_componentes, editar_producto, etc.
+
+
+
+
+
 def eliminar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     producto.activo = False  # Suponiendo que tienes un campo "activo" en el modelo Producto

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="post" action="{% url 'Producto:seleccionar_producto_principal' %}">
+
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Seleccionar</button>
+</form>
+{% endblock %}
