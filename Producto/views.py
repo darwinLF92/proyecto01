@@ -14,46 +14,7 @@ def listar_productos(request):
 def get_productos(request):
     producto = Producto.objects.filter(activo=True).values('nombre', 'precio_compra')
     return JsonResponse(list(producto), safe=False)
-
-
-def seleccionar_producto_principal(request):
-    if request.method == 'POST':
-        form = ProductoPrincipalForm(request.POST)
-        if form.is_valid():
-            # Aquí se captura el producto principal seleccionado del formulario
-            producto_principal = form.cleaned_data['producto_principal']
-            # Redirigir a la vista de agregar componentes con el ID del producto principal
-            return redirect('Producto:agregar_componentes', producto_id=producto_principal.id)
-    else:
-        form = ProductoPrincipalForm()
-    return render(request, 'Producto/seleccionar_producto_principal.html', {'form': form})
-
-def agregar_componentes(request, producto_id):
-    producto = get_object_or_404(Producto, id=producto_id)
-    ComponenteProductoFormSet = inlineformset_factory(
-        Producto,
-        ComponenteProducto,
-        form=ComponenteProductoForm,
-        fields=('producto_componente', 'cantidad'),
-        extra=1,
-        can_delete=True,
-        fk_name='producto_principal'
-    )
-
-    if request.method == 'POST':
-        formset = ComponenteProductoFormSet(request.POST, instance=producto, prefix='componentes')
-        if formset.is_valid():
-            formset.save()
-            return redirect('Producto:ver_detalle_producto', producto_id=producto.id)
-    else:
-        formset = ComponenteProductoFormSet(instance=producto, prefix='componentes')
-
-    context = {
-        'formset': formset,
-        'producto': producto,
-    }
-
-    return render(request, 'Producto/agregar_componentes.html', context)
+ 
 
 
 #para ver la lista de productos marcados como fabricacion
@@ -76,18 +37,6 @@ def agregar_producto(request):
         return render(request, 'Producto/agregar_producto.html', {'form': form})
 
 
-
-# Define el formset una sola vez, fuera de la función de la vista.
-ComponenteProductoFormSet = inlineformset_factory(
-    Producto,
-    ComponenteProducto,
-    form=ComponenteProductoForm,
-    fields=('producto_componente', 'cantidad'),
-    extra=1,
-    can_delete=True,
-    fk_name='producto_principal'
-)
-
 def editar_producto(request, producto_id):
     # Obtén el producto que quieres editar o manda un error 404 si no existe
     producto = get_object_or_404(Producto, id=producto_id)
@@ -106,10 +55,6 @@ def editar_producto(request, producto_id):
 
     # Renderiza la plantilla con el formulario
     return render(request, 'Producto/editar_producto.html', {'form': form, 'producto': producto})
-
-
-
-
 
 
 def eliminar_producto(request, producto_id):
@@ -187,3 +132,52 @@ def ver_detalle_producto(request, producto_id):
     }
 
     return render(request, 'Producto/ver_detalle_producto.html', context)
+
+
+
+from django.db.models import F, Sum
+
+def editar_componentes_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    ComponenteProductoFormSet = inlineformset_factory(
+        Producto, 
+        ComponenteProducto, 
+        form=ComponenteProductoForm, 
+        fields=('producto_componente', 'cantidad'), 
+        extra=1,
+        can_delete=True,
+        fk_name='producto_principal'
+    )
+    
+    if request.method == 'POST':
+        formset = ComponenteProductoFormSet(request.POST, instance=producto, prefix='componentes')
+        if formset.is_valid():
+            formset.save()
+
+            # Calcular el costo total de producción después de guardar el formset
+            costo_total_produccion = producto.componentes_principal.annotate(
+                total_cost=F('cantidad') * F('producto_componente__precio_compra')
+            ).aggregate(Sum('total_cost'))['total_cost__sum'] or 0
+
+            # Establecer el costo total de producción como el nuevo precio de compra
+            producto.precio_compra = costo_total_produccion
+            producto.save()
+
+            return redirect('Producto:listar_productos_fabricacion')
+    else:
+        formset = ComponenteProductoFormSet(instance=producto, prefix='componentes')
+
+        # Calcular el costo total de producción para mostrarlo en el formulario, pero no guardarlo aún
+        costo_total_produccion = producto.componentes_principal.annotate(
+            total_cost=F('cantidad') * F('producto_componente__precio_compra')
+        ).aggregate(Sum('total_cost'))['total_cost__sum'] or 0
+
+    return render(request, 'Producto/editar_componentes_producto.html', {
+        'formset': formset,
+        'producto': producto,
+        'costo_total_produccion': costo_total_produccion,
+    })
+
+
+
+

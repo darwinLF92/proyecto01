@@ -27,6 +27,7 @@
             <td>
                 <a href="{% url 'Producto:aumentar_stock' producto.id %}" class="btn btn-secondary">Aumentar</a>
                 <a href="{% url 'Producto:ver_detalle_producto' producto.id %}" class="btn btn-info">Ver Detalle</a>
+                <a href="{% url 'Producto:editar_componentes_producto' producto.id %}" class="btn btn-primary">Editar Componentes</a>
             </td>
         </tr>
         {% endfor %}

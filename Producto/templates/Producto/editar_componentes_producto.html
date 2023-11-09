@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load my_filters %}
+
+{% block content %}
+<h2>Editar Componentes para: {{ producto.nombre }}</h2>
+
+<form method="post" class="my-form">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Componente</th>
+                <th>Cantidad</th>
+                <th>Precio Compra</th>
+                <th>Costo Total</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+                <tr class="form-group">
+                    <td>{{ form.id }}</td>
+                    <td>
+                        <label>{{ form.producto_componente.label }}</label>
+                        {{ form.producto_componente }}
+                    </td>
+                    <td>
+                        <label>{{ form.cantidad.label }}</label>
+                        {{ form.cantidad }}
+                    </td>
+                    <td>
+                        <span>{{ form.instance.producto_componente.precio_compra|floatformat:2 }}</span>
+                    </td>
+                    <td>
+                        <span>{{ form.instance.cantidad|default:"0"|multiply:form.instance.producto_componente.precio_compra|floatformat:2 }}</span>
+                    </td>
+                    <td>
+                        <label for="{{ form.DELETE.id_for_label }}">Eliminar</label>
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="form-group">
+        <strong>Costo Total de Producción: {{ costo_total_produccion|floatformat:2 }}</strong>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+</form>
+
+<a href="{% url 'Producto:listar_productos_fabricacion' %}" class="btn btn-link">Volver a la lista</a>
+
+{% endblock %}
